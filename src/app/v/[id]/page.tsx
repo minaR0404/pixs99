@@ -6,7 +6,7 @@ type Params = Promise<{ id: string }>;
 
 export default async function ViewerPage({ params }: { params: Params }) {
   const { id } = await params;
-  const result = getSearchResult(id);
+  const result = await getSearchResult(id);
 
   if (!result) {
     notFound();

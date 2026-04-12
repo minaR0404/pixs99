@@ -1,18 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveSearchResult, generateId } from "@/lib/store";
+import { saveSearchResult, generateId, SearchImage } from "@/lib/store";
+import { validateApiKey } from "@/lib/auth";
 
-// Mock image search for MVP — replace with real search (Serper, Google CSE, etc.)
-function mockImageSearch(query: string, count: number) {
-  const images = Array.from({ length: count }, (_, i) => ({
-    url: `https://picsum.photos/seed/${encodeURIComponent(query)}-${i}/400/400`,
-    title: `${query} — image ${i + 1}`,
-    source: `https://example.com/source/${i}`,
+async function searchImages(query: string, count: number): Promise<SearchImage[]> {
+  const res = await fetch("https://google.serper.dev/images", {
+    method: "POST",
+    headers: {
+      "X-API-KEY": process.env.SERPER_API_KEY!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ q: query, num: count }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Serper API error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return (data.images ?? []).slice(0, count).map((img: { imageUrl: string; title: string; link: string; imageWidth?: number; imageHeight?: number }) => ({
+    url: img.imageUrl,
+    title: img.title,
+    source: img.link,
+    width: img.imageWidth,
+    height: img.imageHeight,
   }));
-  return images;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Demo requests (from landing page) skip auth via Referer check
+    const referer = req.headers.get("referer") ?? "";
+    const isDemo = referer.includes(req.nextUrl.origin);
+
+    if (!isDemo) {
+      const authHeader = req.headers.get("authorization") ?? "";
+      const key = authHeader.replace(/^Bearer\s+/i, "");
+      if (!key || !(await validateApiKey(key))) {
+        return NextResponse.json(
+          { error: "Invalid or missing API key" },
+          { status: 401 }
+        );
+      }
+    }
+
     const body = await req.json();
     const { query, count = 8 } = body;
 
@@ -25,10 +55,8 @@ export async function POST(req: NextRequest) {
 
     const clampedCount = Math.min(Math.max(count, 1), 20);
 
-    // Search images (mock for now)
-    const images = mockImageSearch(query.trim(), clampedCount);
+    const images = await searchImages(query.trim(), clampedCount);
 
-    // Save result and generate viewer page
     const id = generateId();
     const result = {
       id,
@@ -36,7 +64,7 @@ export async function POST(req: NextRequest) {
       images,
       created_at: new Date().toISOString(),
     };
-    saveSearchResult(result);
+    await saveSearchResult(result);
 
     const baseUrl = req.nextUrl.origin;
 
