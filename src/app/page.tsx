@@ -24,6 +24,9 @@ export default function Home() {
             <a href="#pricing" className="text-muted hover:text-foreground transition-colors">
               Pricing
             </a>
+            <a href="/dashboard" className="rounded-lg bg-accent px-4 py-1.5 text-white font-medium hover:opacity-90 transition-opacity">
+              Dashboard
+            </a>
           </nav>
         </div>
       </header>
