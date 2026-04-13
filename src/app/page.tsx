@@ -11,9 +11,7 @@ export default function Home() {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
-              PS
-            </div>
+            <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
             <span className="font-bold text-lg tracking-tight">PixS99</span>
           </div>
           <nav className="flex items-center gap-6 text-sm">

@@ -17,9 +17,7 @@ export default async function ViewerPage({ params }: { params: Params }) {
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
-              PS
-            </div>
+            <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
             <span className="font-bold text-lg tracking-tight">PixS99</span>
           </a>
           <span className="text-xs text-muted font-mono">{id}</span>

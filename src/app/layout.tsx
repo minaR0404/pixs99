@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "PixS99 — Image Search & Viewer API",
   description:
     "Search images and get a shareable viewer URL in one API call. Built for AI agents, bots, and developers.",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
