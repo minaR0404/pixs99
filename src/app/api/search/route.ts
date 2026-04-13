@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveSearchResult, generateId, SearchImage } from "@/lib/store";
 import { validateApiKey } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 async function searchImages(query: string, count: number): Promise<SearchImage[]> {
   const res = await fetch("https://google.serper.dev/images", {
@@ -32,6 +33,9 @@ export async function POST(req: NextRequest) {
     const referer = req.headers.get("referer") ?? "";
     const isDemo = referer.includes(req.nextUrl.origin);
 
+    let rateLimitKey: string;
+    let rateLimitType: "demo" | "api";
+
     if (!isDemo) {
       const authHeader = req.headers.get("authorization") ?? "";
       const key = authHeader.replace(/^Bearer\s+/i, "");
@@ -41,6 +45,19 @@ export async function POST(req: NextRequest) {
           { status: 401 }
         );
       }
+      rateLimitKey = key;
+      rateLimitType = "api";
+    } else {
+      rateLimitKey = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+      rateLimitType = "demo";
+    }
+
+    const remaining = await checkRateLimit(rateLimitKey, rateLimitType);
+    if (remaining < 0) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Try again tomorrow." },
+        { status: 429 }
+      );
     }
 
     const body = await req.json();
