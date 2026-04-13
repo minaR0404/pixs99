@@ -1,8 +1,36 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSearchResult } from "@/lib/store";
 import ViewerClient from "./viewer-client";
 
 type Params = Promise<{ id: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { id } = await params;
+  const result = await getSearchResult(id);
+
+  if (!result) {
+    return { title: "Not Found — PixS99" };
+  }
+
+  const firstImage = result.images[0]?.url;
+
+  return {
+    title: `${result.query} — PixS99`,
+    description: `${result.images.length} images for "${result.query}"`,
+    openGraph: {
+      title: `${result.query} — PixS99`,
+      description: `${result.images.length} images for "${result.query}"`,
+      ...(firstImage ? { images: [{ url: firstImage }] } : {}),
+    },
+    twitter: {
+      card: firstImage ? "summary_large_image" : "summary",
+      title: `${result.query} — PixS99`,
+      description: `${result.images.length} images for "${result.query}"`,
+      ...(firstImage ? { images: [firstImage] } : {}),
+    },
+  };
+}
 
 export default async function ViewerPage({ params }: { params: Params }) {
   const { id } = await params;
