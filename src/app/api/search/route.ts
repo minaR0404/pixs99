@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { saveSearchResult, generateId, SearchImage } from "@/lib/store";
 import { validateApiKey } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logUsage } from "@/lib/usage";
 
 async function searchImages(query: string, count: number): Promise<SearchImage[]> {
   const res = await fetch("https://google.serper.dev/images", {
@@ -82,6 +83,15 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     };
     await saveSearchResult(result);
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    logUsage({
+      query: query.trim(),
+      imageCount: images.length,
+      isDemo,
+      apiKey: isDemo ? undefined : rateLimitKey,
+      ip,
+    });
 
     const baseUrl = req.nextUrl.origin;
 
