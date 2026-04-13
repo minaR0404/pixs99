@@ -8,7 +8,7 @@ function hashKey(key: string): string {
 }
 
 export function generateApiKey(): string {
-  return "ir_" + randomBytes(24).toString("hex");
+  return "ps99_" + randomBytes(24).toString("hex");
 }
 
 export async function createApiKey(name: string): Promise<string> {

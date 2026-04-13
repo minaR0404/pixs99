@@ -18,9 +18,9 @@ export default async function ViewerPage({ params }: { params: Params }) {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
-              IR
+              PS
             </div>
-            <span className="font-bold text-lg tracking-tight">ImgRelay</span>
+            <span className="font-bold text-lg tracking-tight">PixS99</span>
           </a>
           <span className="text-xs text-muted font-mono">{id}</span>
         </div>
@@ -44,7 +44,7 @@ export default async function ViewerPage({ params }: { params: Params }) {
 
       <footer className="border-t border-border px-6 py-4">
         <div className="max-w-5xl mx-auto text-xs text-muted">
-          Powered by <a href="/" className="text-accent hover:underline">ImgRelay</a>
+          Powered by <a href="/" className="text-accent hover:underline">PixS99</a>
         </div>
       </footer>
     </div>

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ImgRelay — Image Search & Viewer API",
+  title: "PixS99 — Image Search & Viewer API",
   description:
     "Search images and get a shareable viewer URL in one API call. Built for AI agents, bots, and developers.",
 };

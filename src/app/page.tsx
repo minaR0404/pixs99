@@ -12,9 +12,9 @@ export default function Home() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm">
-              IR
+              PS
             </div>
-            <span className="font-bold text-lg tracking-tight">ImgRelay</span>
+            <span className="font-bold text-lg tracking-tight">PixS99</span>
           </div>
           <nav className="flex items-center gap-6 text-sm">
             <a href="#demo" className="text-muted hover:text-foreground transition-colors">
@@ -120,7 +120,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted">
-          <span>ImgRelay &copy; {new Date().getFullYear()}</span>
+          <span>PixS99 &copy; {new Date().getFullYear()}</span>
           <div className="flex gap-4">
             <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
             <a href="/docs" className="hover:text-foreground transition-colors">API Docs</a>
