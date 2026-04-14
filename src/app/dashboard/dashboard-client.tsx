@@ -146,12 +146,7 @@ export default function DashboardClient() {
                   <code className="flex-1 text-sm font-mono bg-background rounded px-3 py-2 break-all">
                     {createdKey}
                   </code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(createdKey)}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
-                  >
-                    Copy
-                  </button>
+                  <CopyButton text={createdKey} />
                 </div>
               </div>
             )}
@@ -258,5 +253,26 @@ export default function DashboardClient() {
         </div>
       )}
     </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-all ${
+        copied ? "bg-green-600" : "bg-accent hover:opacity-90"
+      }`}
+    >
+      {copied ? "Copied!" : "Copy"}
+    </button>
   );
 }
