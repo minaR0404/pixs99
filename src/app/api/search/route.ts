@@ -36,16 +36,19 @@ export async function POST(req: NextRequest) {
 
     let rateLimitKey: string;
     let rateLimitType: "demo" | "api";
+    let githubId: string | null = null;
 
     if (!isDemo) {
       const authHeader = req.headers.get("authorization") ?? "";
       const key = authHeader.replace(/^Bearer\s+/i, "");
-      if (!key || !(await validateApiKey(key))) {
+      const result = await validateApiKey(key);
+      if (!key || !result.valid) {
         return NextResponse.json(
           { error: "Invalid or missing API key" },
           { status: 401 }
         );
       }
+      githubId = result.githubId;
       rateLimitKey = key;
       rateLimitType = "api";
     } else {
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
       images,
       created_at: new Date().toISOString(),
     };
-    await saveSearchResult(result);
+    await saveSearchResult(result, githubId);
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     logUsage({

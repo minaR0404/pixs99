@@ -22,11 +22,12 @@ export async function createApiKey(name: string, githubId?: string): Promise<str
   return key;
 }
 
-export async function validateApiKey(key: string): Promise<boolean> {
+export async function validateApiKey(key: string): Promise<{ valid: true; githubId: string | null } | { valid: false }> {
   const rows = await sql`
-    SELECT 1 FROM api_keys WHERE key_hash = ${hashKey(key)} AND is_active = TRUE
+    SELECT github_id FROM api_keys WHERE key_hash = ${hashKey(key)} AND is_active = TRUE
   `;
-  return rows.length > 0;
+  if (rows.length === 0) return { valid: false };
+  return { valid: true, githubId: (rows[0].github_id as string) ?? null };
 }
 
 export interface ApiKeyInfo {

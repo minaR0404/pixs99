@@ -41,7 +41,7 @@ export default async function DashboardPage() {
       />
       <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">API Keys</h1>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
           <form
             action={async () => {
               "use server";
