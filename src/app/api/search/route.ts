@@ -3,6 +3,7 @@ import { saveSearchResult, generateId, SearchImage } from "@/lib/store";
 import { validateApiKey } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logUsage } from "@/lib/usage";
+import { proxyUrl } from "@/lib/proxy";
 
 async function searchImages(query: string, count: number): Promise<SearchImage[]> {
   const res = await fetch("https://google.serper.dev/images", {
@@ -97,12 +98,16 @@ export async function POST(req: NextRequest) {
     });
 
     const baseUrl = req.nextUrl.origin;
+    const imagesWithProxy = images.map((img) => ({
+      ...img,
+      proxy_url: proxyUrl(img.url, baseUrl),
+    }));
 
     return NextResponse.json({
       viewer_url: `${baseUrl}/v/${id}`,
       id,
       query: query.trim(),
-      images,
+      images: imagesWithProxy,
     });
   } catch {
     return NextResponse.json(

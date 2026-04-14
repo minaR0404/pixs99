@@ -137,7 +137,7 @@ function DemoSection() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     viewer_url: string;
-    images: { url: string; title: string }[];
+    images: { url: string; title: string; proxy_url?: string }[];
   } | null>(null);
 
   async function handleSearch() {
@@ -199,7 +199,7 @@ function DemoSection() {
                 className="aspect-square rounded-lg bg-card border border-border overflow-hidden"
               >
                 <img
-                  src={img.url}
+                  src={img.proxy_url ?? img.url}
                   alt={img.title}
                   className="w-full h-full object-cover"
                   loading="lazy"

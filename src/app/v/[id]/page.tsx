@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSearchResult } from "@/lib/store";
+import { proxyUrl } from "@/lib/proxy";
+import { headers } from "next/headers";
 import ViewerClient from "./viewer-client";
 
 type Params = Promise<{ id: string }>;
@@ -40,6 +42,11 @@ export default async function ViewerPage({ params }: { params: Params }) {
     notFound();
   }
 
+  const h = await headers();
+  const host = h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const baseUrl = `${proto}://${host}`;
+
   return (
     <div className="flex-1 flex flex-col">
       <header className="border-b border-border px-6 py-4">
@@ -65,7 +72,11 @@ export default async function ViewerPage({ params }: { params: Params }) {
           </span>
         </div>
 
-        <ViewerClient images={result.images} />
+        <ViewerClient images={result.images.map((img) => ({
+          ...img,
+          url: proxyUrl(img.url, baseUrl),
+          original_url: img.url,
+        }))} />
       </main>
 
       <footer className="border-t border-border px-6 py-4">

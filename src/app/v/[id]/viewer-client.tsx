@@ -4,6 +4,7 @@ import { useState } from "react";
 
 interface Image {
   url: string;
+  original_url?: string;
   title: string;
   source?: string;
   width?: number;
