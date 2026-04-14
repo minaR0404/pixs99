@@ -95,27 +95,7 @@ export default function Home() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="space-y-6">
-          <h2 className="text-xl font-semibold">Pricing</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
-            <PricingCard
-              tier="Free"
-              price="$0"
-              features={["50 searches / month", "Viewer pages (7-day TTL)", "Community support"]}
-            />
-            <PricingCard
-              tier="Pro"
-              price="$9"
-              features={["2,000 searches / month", "Viewer pages (30-day TTL)", "API key dashboard", "Priority support"]}
-              highlighted
-            />
-            <PricingCard
-              tier="Growth"
-              price="$29"
-              features={["10,000 searches / month", "Viewer pages (90-day TTL)", "Custom branding", "Search history"]}
-            />
-          </div>
-        </section>
+        <PricingSection />
       </main>
 
       {/* Footer */}
@@ -233,23 +213,52 @@ function StepCard({
   );
 }
 
+function PricingSection() {
+  const [selected, setSelected] = useState("Pro");
+  const plans = [
+    { tier: "Free", price: "$0", features: ["50 searches / month", "Viewer pages (7-day TTL)", "Community support"] },
+    { tier: "Pro", price: "$9", features: ["2,000 searches / month", "Viewer pages (30-day TTL)", "API key dashboard", "Priority support"] },
+    { tier: "Growth", price: "$29", features: ["10,000 searches / month", "Viewer pages (Unlimited TTL)", "Custom branding", "Search history"] },
+  ];
+  return (
+    <section id="pricing" className="space-y-6">
+      <h2 className="text-xl font-semibold">Pricing</h2>
+      <div className="grid sm:grid-cols-3 gap-6">
+        {plans.map((p) => (
+          <PricingCard
+            key={p.tier}
+            tier={p.tier}
+            price={p.price}
+            features={p.features}
+            selected={selected === p.tier}
+            onSelect={() => setSelected(p.tier)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function PricingCard({
   tier,
   price,
   features,
-  highlighted,
+  selected,
+  onSelect,
 }: {
   tier: string;
   price: string;
   features: string[];
-  highlighted?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   return (
     <div
-      className={`rounded-lg border p-6 space-y-4 ${
-        highlighted
+      onClick={onSelect}
+      className={`rounded-lg border p-6 space-y-4 cursor-pointer transition-colors ${
+        selected
           ? "bg-accent/5 border-accent/30"
-          : "bg-card border-border"
+          : "bg-card border-border hover:border-accent/20"
       }`}
     >
       <div>
@@ -268,7 +277,7 @@ function PricingCard({
       </ul>
       <button
         className={`w-full rounded-lg py-2 text-sm font-medium transition-opacity ${
-          highlighted
+          selected
             ? "bg-accent text-white hover:opacity-90"
             : "bg-border text-foreground hover:opacity-80"
         }`}
