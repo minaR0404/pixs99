@@ -37,7 +37,7 @@ export default function DocsPage() {
             Include your API key in the <Code>Authorization</Code> header:
           </p>
           <CodeBlock>
-            {`Authorization: Bearer ps99_your_api_key_here`}
+            {`Authorization: Bearer pixs99_your_api_key_here`}
           </CodeBlock>
           <p>
             Get your API key from the{" "}
@@ -55,7 +55,7 @@ export default function DocsPage() {
           <H3>Request</H3>
           <CodeBlock>
             {`curl -X POST https://pixs99.com/api/search \\
-  -H "Authorization: Bearer ps99_your_key" \\
+  -H "Authorization: Bearer pixs99_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{"query": "tokyo skyline", "count": 10}'`}
           </CodeBlock>

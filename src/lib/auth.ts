@@ -8,13 +8,13 @@ function hashKey(key: string): string {
 }
 
 export function generateApiKey(): string {
-  return "ps99_" + randomBytes(24).toString("hex");
+  return "pixs99_" + randomBytes(24).toString("hex");
 }
 
 export async function createApiKey(name: string, githubId?: string): Promise<string> {
   const key = generateApiKey();
   const id = randomBytes(8).toString("hex");
-  const prefix = key.slice(0, 12) + "...";
+  const prefix = key.slice(0, 14) + "...";
   await sql`
     INSERT INTO api_keys (id, name, key_hash, key_prefix, github_id)
     VALUES (${id}, ${name}, ${hashKey(key)}, ${prefix}, ${githubId ?? null})
