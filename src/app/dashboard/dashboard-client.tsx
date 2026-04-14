@@ -25,6 +25,7 @@ export default function DashboardClient() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyFetched, setHistoryFetched] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -42,6 +43,7 @@ export default function DashboardClient() {
     const data = await res.json();
     setHistory(data.history ?? []);
     setHistoryLoading(false);
+    setHistoryFetched(true);
   }, []);
 
   useEffect(() => {
@@ -49,10 +51,10 @@ export default function DashboardClient() {
   }, [fetchKeys]);
 
   useEffect(() => {
-    if (tab === "history" && history.length === 0 && !historyLoading) {
+    if (tab === "history" && !historyFetched) {
       fetchHistory();
     }
-  }, [tab, history.length, historyLoading, fetchHistory]);
+  }, [tab, historyFetched, fetchHistory]);
 
   async function handleCreate() {
     if (!newKeyName.trim() || creating) return;
@@ -214,7 +216,7 @@ export default function DashboardClient() {
 
       {tab === "history" && (
         <div className="rounded-lg bg-card border border-border overflow-hidden">
-          {historyLoading ? (
+          {!historyFetched || historyLoading ? (
             <p className="px-5 py-8 text-center text-muted text-sm">Loading...</p>
           ) : history.length === 0 ? (
             <p className="px-5 py-8 text-center text-muted text-sm">
