@@ -18,12 +18,12 @@ interface HistoryItem {
 }
 
 type Tab = "keys" | "history" | "plan";
-type Plan = "free" | "pro" | "growth";
+type Plan = "free" | "pro" | "ultra";
 
 const PLAN_LABELS: Record<Plan, string> = {
   free: "Free",
   pro: "Pro",
-  growth: "Growth",
+  ultra: "Ultra",
 };
 
 export default function DashboardClient({ plan }: { plan: Plan }) {
@@ -279,8 +279,8 @@ export default function DashboardClient({ plan }: { plan: Plan }) {
 
 const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = [
   { key: "free", name: "Free", price: "$0", features: ["50 searches / month", "7-day TTL"] },
-  { key: "pro", name: "Pro", price: "$9", features: ["2,000 searches / month", "30-day TTL", "API key dashboard"] },
-  { key: "growth", name: "Growth", price: "$29", features: ["10,000 searches / month", "Unlimited TTL", "Search history"] },
+  { key: "pro", name: "Pro", price: "$19", features: ["2,000 searches / month", "30-day TTL", "API key dashboard"] },
+  { key: "ultra", name: "Ultra", price: "$49", features: ["10,000 searches / month", "Unlimited TTL", "Search history"] },
 ];
 
 function PlanSection({ plan }: { plan: Plan }) {
@@ -327,7 +327,7 @@ function PlanSection({ plan }: { plan: Plan }) {
       <div className="grid sm:grid-cols-3 gap-4">
         {PLANS.map((p) => {
           const isCurrent = p.key === plan;
-          const isDowngrade = (plan === "growth" && p.key === "pro") || (plan !== "free" && p.key === "free");
+          const isDowngrade = (plan === "ultra" && p.key === "pro") || (plan !== "free" && p.key === "free");
           return (
             <div
               key={p.key}

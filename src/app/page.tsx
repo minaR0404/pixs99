@@ -217,8 +217,8 @@ function PricingSection() {
   const [selected, setSelected] = useState("Pro");
   const plans = [
     { tier: "Free", price: "$0", features: ["50 searches / month", "Viewer pages (7-day TTL)", "Community support"] },
-    { tier: "Pro", price: "$9", features: ["2,000 searches / month", "Viewer pages (30-day TTL)", "API key dashboard", "Priority support"] },
-    { tier: "Growth", price: "$29", features: ["10,000 searches / month", "Viewer pages (Unlimited TTL)", "Custom branding", "Search history"] },
+    { tier: "Pro", price: "$19", features: ["2,000 searches / month", "Viewer pages (30-day TTL)", "API key dashboard", "Priority support"] },
+    { tier: "Ultra", price: "$49", features: ["10,000 searches / month", "Viewer pages (Unlimited TTL)", "Custom branding", "Search history"] },
   ];
   return (
     <section id="pricing" className="space-y-6">

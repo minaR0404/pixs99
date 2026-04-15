@@ -4,7 +4,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
 });
 
-export type Plan = "free" | "pro" | "growth";
+export type Plan = "free" | "pro" | "ultra";
 
 export const PLAN_CONFIG: Record<Plan, {
   name: string;
@@ -24,9 +24,9 @@ export const PLAN_CONFIG: Record<Plan, {
     searchesPerDay: 70,
     ttlDays: 30,
   },
-  growth: {
-    name: "Growth",
-    priceId: process.env.STRIPE_GROWTH_PRICE_ID ?? "",
+  ultra: {
+    name: "Ultra",
+    priceId: process.env.STRIPE_ULTRA_PRICE_ID ?? "",
     searchesPerDay: 350,
     ttlDays: null,
   },
