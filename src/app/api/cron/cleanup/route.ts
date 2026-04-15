@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { PLAN_CONFIG } from "@/lib/stripe";
 
 const sql = neon(process.env.DATABASE_URL!);
-
-const TTL_DAYS = 7;
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -11,13 +10,31 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await sql`
-    DELETE FROM search_results
-    WHERE created_at < NOW() - MAKE_INTERVAL(days => ${TTL_DAYS})
-  `;
+  // Delete expired results per plan TTL
+  // Growth (ttlDays: null) is never deleted
+  let totalDeleted = 0;
 
-  return NextResponse.json({
-    deleted: result.length,
-    ttl_days: TTL_DAYS,
-  });
+  for (const [plan, config] of Object.entries(PLAN_CONFIG)) {
+    if (config.ttlDays === null) continue; // unlimited
+
+    const result = await sql`
+      DELETE FROM search_results
+      WHERE created_at < NOW() - MAKE_INTERVAL(days => ${config.ttlDays})
+        AND COALESCE(
+          (SELECT plan FROM users WHERE users.github_id = search_results.github_id),
+          'free'
+        ) = ${plan}
+    `;
+    totalDeleted += result.length;
+  }
+
+  // Also clean up anonymous (demo) results with free TTL
+  const demoResult = await sql`
+    DELETE FROM search_results
+    WHERE created_at < NOW() - MAKE_INTERVAL(days => ${PLAN_CONFIG.free.ttlDays!})
+      AND github_id IS NULL
+  `;
+  totalDeleted += demoResult.length;
+
+  return NextResponse.json({ deleted: totalDeleted });
 }

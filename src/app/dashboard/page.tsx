@@ -1,4 +1,5 @@
 import { auth, signIn, signOut } from "@/lib/next-auth";
+import { getUserPlan } from "@/lib/store";
 import DashboardClient from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
             </button>
           </form>
         </div>
-        <DashboardClient />
+        <DashboardClient plan={await getUserPlan(session.user.id!)} />
       </main>
     </div>
   );

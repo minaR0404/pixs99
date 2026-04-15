@@ -17,9 +17,16 @@ interface HistoryItem {
   created_at: string;
 }
 
-type Tab = "keys" | "history";
+type Tab = "keys" | "history" | "plan";
+type Plan = "free" | "pro" | "growth";
 
-export default function DashboardClient() {
+const PLAN_LABELS: Record<Plan, string> = {
+  free: "Free",
+  pro: "Pro",
+  growth: "Growth",
+};
+
+export default function DashboardClient({ plan }: { plan: Plan }) {
   const [tab, setTab] = useState<Tab>("keys");
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -111,6 +118,16 @@ export default function DashboardClient() {
           }`}
         >
           Search History
+        </button>
+        <button
+          onClick={() => setTab("plan")}
+          className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
+            tab === "plan"
+              ? "border-b-2 border-accent text-foreground"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Plan
         </button>
       </div>
 
@@ -209,6 +226,10 @@ export default function DashboardClient() {
         </>
       )}
 
+      {tab === "plan" && (
+        <PlanSection plan={plan} />
+      )}
+
       {tab === "history" && (
         <div className="rounded-lg bg-card border border-border overflow-hidden">
           {!historyFetched || historyLoading ? (
@@ -252,6 +273,101 @@ export default function DashboardClient() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = [
+  { key: "free", name: "Free", price: "$0", features: ["50 searches / month", "7-day TTL"] },
+  { key: "pro", name: "Pro", price: "$9", features: ["2,000 searches / month", "30-day TTL", "API key dashboard"] },
+  { key: "growth", name: "Growth", price: "$29", features: ["10,000 searches / month", "Unlimited TTL", "Search history"] },
+];
+
+function PlanSection({ plan }: { plan: Plan }) {
+  const [upgrading, setUpgrading] = useState<Plan | null>(null);
+
+  async function handleUpgrade(target: Plan) {
+    setUpgrading(target);
+    const res = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: target }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+    setUpgrading(null);
+  }
+
+  async function handleManage() {
+    const res = await fetch("/api/stripe/portal", { method: "POST" });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg bg-card border border-border p-5">
+        <p className="text-sm text-muted">
+          Current plan: <span className="text-foreground font-semibold">{PLAN_LABELS[plan]}</span>
+        </p>
+        {plan !== "free" && (
+          <button
+            onClick={handleManage}
+            className="mt-3 text-sm text-accent hover:underline"
+          >
+            Manage subscription
+          </button>
+        )}
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        {PLANS.map((p) => {
+          const isCurrent = p.key === plan;
+          const isDowngrade = (plan === "growth" && p.key === "pro") || (plan !== "free" && p.key === "free");
+          return (
+            <div
+              key={p.key}
+              className={`rounded-lg border p-5 space-y-3 ${
+                isCurrent ? "bg-accent/5 border-accent/30" : "bg-card border-border"
+              }`}
+            >
+              <div>
+                <h3 className="font-semibold">{p.name}</h3>
+                <p className="text-2xl font-bold mt-1">
+                  {p.price}<span className="text-sm font-normal text-muted">/mo</span>
+                </p>
+              </div>
+              <ul className="space-y-1 text-sm text-muted">
+                {p.features.map((f, i) => (
+                  <li key={i}>+ {f}</li>
+                ))}
+              </ul>
+              {isCurrent ? (
+                <span className="block text-center text-sm text-muted py-2">Current plan</span>
+              ) : isDowngrade ? (
+                <button
+                  onClick={handleManage}
+                  className="w-full rounded-lg py-2 text-sm font-medium bg-border text-foreground hover:opacity-80 transition-opacity"
+                >
+                  Manage
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleUpgrade(p.key)}
+                  disabled={upgrading !== null}
+                  className="w-full rounded-lg py-2 text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-40"
+                >
+                  {upgrading === p.key ? "Redirecting..." : "Upgrade"}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -64,3 +64,33 @@ export async function getSearchResult(id: string): Promise<SearchResult | null> 
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
+
+// --- Subscription helpers ---
+
+import type { Plan } from "./stripe";
+
+export async function getUserPlan(githubId: string): Promise<Plan> {
+  const rows = await sql`
+    SELECT plan FROM users WHERE github_id = ${githubId}
+  `;
+  return (rows[0]?.plan as Plan) ?? "free";
+}
+
+export async function setUserPlan(githubId: string, plan: Plan): Promise<void> {
+  await sql`
+    UPDATE users SET plan = ${plan}, updated_at = NOW() WHERE github_id = ${githubId}
+  `;
+}
+
+export async function setStripeCustomerId(githubId: string, customerId: string): Promise<void> {
+  await sql`
+    UPDATE users SET stripe_customer_id = ${customerId}, updated_at = NOW() WHERE github_id = ${githubId}
+  `;
+}
+
+export async function getStripeCustomerId(githubId: string): Promise<string | null> {
+  const rows = await sql`
+    SELECT stripe_customer_id FROM users WHERE github_id = ${githubId}
+  `;
+  return (rows[0]?.stripe_customer_id as string) ?? null;
+}

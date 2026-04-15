@@ -1,11 +1,10 @@
 import { neon } from "@neondatabase/serverless";
+import type { Plan } from "./stripe";
+import { PLAN_CONFIG } from "./stripe";
 
 const sql = neon(process.env.DATABASE_URL!);
 
-const LIMITS = {
-  demo: 10,    // IP単位: 1日10回
-  api: 50,     // APIキー単位: 1日50回
-};
+const DEMO_LIMIT = 10; // IP単位: 1日10回
 
 /**
  * レート制限チェック & カウント加算
@@ -13,9 +12,10 @@ const LIMITS = {
  */
 export async function checkRateLimit(
   key: string,
-  type: "demo" | "api"
+  type: "demo" | "api",
+  plan: Plan = "free"
 ): Promise<number> {
-  const limit = LIMITS[type];
+  const limit = type === "demo" ? DEMO_LIMIT : PLAN_CONFIG[plan].searchesPerDay;
 
   const rows = await sql`
     INSERT INTO rate_limits (key, date, count)
