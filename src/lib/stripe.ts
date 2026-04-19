@@ -10,24 +10,28 @@ export const PLAN_CONFIG: Record<Plan, {
   name: string;
   priceId: string | null;
   searchesPerDay: number;
+  searchesPerMonth: number;
   ttlDays: number | null; // null = unlimited
 }> = {
   free: {
     name: "Free",
     priceId: null,
     searchesPerDay: 10,
+    searchesPerMonth: 50,
     ttlDays: 7,
   },
   pro: {
     name: "Pro",
     priceId: process.env.STRIPE_PRO_PRICE_ID ?? "",
     searchesPerDay: 70,
+    searchesPerMonth: 2000,
     ttlDays: 30,
   },
   ultra: {
     name: "Ultra",
     priceId: process.env.STRIPE_ULTRA_PRICE_ID ?? "",
     searchesPerDay: 350,
+    searchesPerMonth: 10000,
     ttlDays: null,
   },
 };

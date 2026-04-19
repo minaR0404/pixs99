@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const remaining = await checkRateLimit(rateLimitKey, rateLimitType, plan);
     if (remaining < 0) {
       return NextResponse.json(
-        { error: "Rate limit exceeded. Try again tomorrow." },
+        { error: "Rate limit exceeded." },
         { status: 429 }
       );
     }

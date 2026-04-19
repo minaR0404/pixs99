@@ -297,9 +297,9 @@ export default function DashboardClient({
 }
 
 const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = [
-  { key: "free", name: "Free", price: "$0", features: ["50 searches / month", "7-day TTL"] },
-  { key: "pro", name: "Pro", price: "$19", features: ["2,000 searches / month", "30-day TTL", "API key dashboard"] },
-  { key: "ultra", name: "Ultra", price: "$49", features: ["10,000 searches / month", "Unlimited TTL", "Search history"] },
+  { key: "free", name: "Free", price: "$0", features: ["10 searches / day", "50 searches / month", "7-day TTL"] },
+  { key: "pro", name: "Pro", price: "$19", features: ["70 searches / day", "2,000 searches / month", "30-day TTL", "API key dashboard"] },
+  { key: "ultra", name: "Ultra", price: "$49", features: ["350 searches / day", "10,000 searches / month", "Unlimited TTL", "Search history"] },
 ];
 
 function PlanSection({
