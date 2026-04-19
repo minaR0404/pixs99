@@ -38,3 +38,26 @@ export function planFromPriceId(priceId: string): Plan {
   }
   return "free";
 }
+
+export interface SubscriptionInfo {
+  currentPeriodEnd: number;
+  cancelAtPeriodEnd: boolean;
+}
+
+export async function getSubscriptionInfo(
+  customerId: string
+): Promise<SubscriptionInfo | null> {
+  const subs = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "active",
+    limit: 1,
+  });
+  const sub = subs.data[0];
+  if (!sub) return null;
+  const periodEnd = sub.items.data[0]?.current_period_end;
+  if (!periodEnd) return null;
+  return {
+    currentPeriodEnd: periodEnd,
+    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+  };
+}

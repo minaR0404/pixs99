@@ -20,13 +20,24 @@ interface HistoryItem {
 type Tab = "keys" | "history" | "plan";
 type Plan = "free" | "pro" | "ultra";
 
+interface SubscriptionInfo {
+  currentPeriodEnd: number;
+  cancelAtPeriodEnd: boolean;
+}
+
 const PLAN_LABELS: Record<Plan, string> = {
   free: "Free",
   pro: "Pro",
   ultra: "Ultra",
 };
 
-export default function DashboardClient({ plan }: { plan: Plan }) {
+export default function DashboardClient({
+  plan,
+  subscription,
+}: {
+  plan: Plan;
+  subscription: SubscriptionInfo | null;
+}) {
   const [tab, setTab] = useState<Tab>("keys");
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -56,6 +67,14 @@ export default function DashboardClient({ plan }: { plan: Plan }) {
   useEffect(() => {
     fetchKeys();
   }, [fetchKeys]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("upgraded")) {
+      window.history.replaceState({}, "", "/dashboard");
+      setTab("plan");
+    }
+  }, []);
 
   useEffect(() => {
     if (tab === "history" && !historyFetched) {
@@ -227,7 +246,7 @@ export default function DashboardClient({ plan }: { plan: Plan }) {
       )}
 
       {tab === "plan" && (
-        <PlanSection plan={plan} />
+        <PlanSection plan={plan} subscription={subscription} />
       )}
 
       {tab === "history" && (
@@ -283,8 +302,17 @@ const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = 
   { key: "ultra", name: "Ultra", price: "$49", features: ["10,000 searches / month", "Unlimited TTL", "Search history"] },
 ];
 
-function PlanSection({ plan }: { plan: Plan }) {
+function PlanSection({
+  plan,
+  subscription,
+}: {
+  plan: Plan;
+  subscription: SubscriptionInfo | null;
+}) {
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
+
+  const periodEndDate =
+    subscription && new Date(subscription.currentPeriodEnd * 1000).toLocaleDateString();
 
   async function handleUpgrade(target: Plan) {
     setUpgrading(target);
@@ -310,14 +338,25 @@ function PlanSection({ plan }: { plan: Plan }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg bg-card border border-border p-5">
+      <div className="rounded-lg bg-card border border-border p-5 space-y-2">
         <p className="text-sm text-muted">
           Current plan: <span className="text-foreground font-semibold">{PLAN_LABELS[plan]}</span>
         </p>
+        {subscription && periodEndDate && (
+          subscription.cancelAtPeriodEnd ? (
+            <p className="text-sm text-muted">
+              Ends on <span className="text-foreground font-medium">{periodEndDate}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-muted">
+              Renews on <span className="text-foreground font-medium">{periodEndDate}</span>
+            </p>
+          )
+        )}
         {plan !== "free" && (
           <button
             onClick={handleManage}
-            className="mt-3 text-sm text-accent hover:underline"
+            className="mt-1 text-sm text-accent hover:underline"
           >
             Manage subscription
           </button>

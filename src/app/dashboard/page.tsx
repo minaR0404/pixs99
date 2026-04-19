@@ -1,5 +1,6 @@
 import { auth, signIn, signOut } from "@/lib/next-auth";
-import { getUserPlan } from "@/lib/store";
+import { getUserPlan, getStripeCustomerId } from "@/lib/store";
+import { getSubscriptionInfo } from "@/lib/stripe";
 import DashboardClient from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -57,10 +58,18 @@ export default async function DashboardPage() {
             </button>
           </form>
         </div>
-        <DashboardClient plan={await getUserPlan(session.user.id!)} />
+        <DashboardClient {...await loadPlanProps(session.user.id!)} />
       </main>
     </div>
   );
+}
+
+async function loadPlanProps(githubId: string) {
+  const plan = await getUserPlan(githubId);
+  if (plan === "free") return { plan, subscription: null };
+  const customerId = await getStripeCustomerId(githubId);
+  const subscription = customerId ? await getSubscriptionInfo(customerId) : null;
+  return { plan, subscription };
 }
 
 function Header({ user }: { user?: { name: string; image: string } }) {
