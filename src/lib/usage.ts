@@ -45,3 +45,22 @@ export async function getUsageByKey(apiKeyHash: string): Promise<{
     total: Number(rows[0].total),
   };
 }
+
+export async function getUserUsage(githubId: string): Promise<{
+  today: number;
+  thisMonth: number;
+}> {
+  const rows = await sql`
+    SELECT
+      COUNT(*) FILTER (WHERE u.created_at::date = CURRENT_DATE) AS today,
+      COUNT(*) FILTER (WHERE u.created_at >= date_trunc('month', CURRENT_DATE)) AS this_month
+    FROM usage_logs u
+    WHERE u.api_key_hash IN (
+      SELECT key_hash FROM api_keys WHERE github_id = ${githubId}
+    )
+  `;
+  return {
+    today: Number(rows[0].today),
+    thisMonth: Number(rows[0].this_month),
+  };
+}

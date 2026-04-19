@@ -25,6 +25,13 @@ interface SubscriptionInfo {
   cancelAt: number | null;
 }
 
+interface Usage {
+  today: number;
+  thisMonth: number;
+  dailyLimit: number;
+  monthlyLimit: number;
+}
+
 const PLAN_LABELS: Record<Plan, string> = {
   free: "Free",
   pro: "Pro",
@@ -34,9 +41,11 @@ const PLAN_LABELS: Record<Plan, string> = {
 export default function DashboardClient({
   plan,
   subscription,
+  usage,
 }: {
   plan: Plan;
   subscription: SubscriptionInfo | null;
+  usage: Usage;
 }) {
   const [tab, setTab] = useState<Tab>("keys");
   const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -246,7 +255,7 @@ export default function DashboardClient({
       )}
 
       {tab === "plan" && (
-        <PlanSection plan={plan} subscription={subscription} />
+        <PlanSection plan={plan} subscription={subscription} usage={usage} />
       )}
 
       {tab === "history" && (
@@ -305,9 +314,11 @@ const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = 
 function PlanSection({
   plan,
   subscription,
+  usage,
 }: {
   plan: Plan;
   subscription: SubscriptionInfo | null;
+  usage: Usage;
 }) {
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
 
@@ -352,6 +363,14 @@ function PlanSection({
             </p>
           )
         )}
+        <div className="pt-3 mt-1 border-t border-border space-y-1">
+          <p className="text-sm text-muted">
+            Today: <span className="text-foreground font-medium">{usage.today.toLocaleString()}</span> / {usage.dailyLimit.toLocaleString()} searches
+          </p>
+          <p className="text-sm text-muted">
+            This month: <span className="text-foreground font-medium">{usage.thisMonth.toLocaleString()}</span> / {usage.monthlyLimit.toLocaleString()} searches
+          </p>
+        </div>
         {plan !== "free" && (
           <button
             onClick={handleManage}

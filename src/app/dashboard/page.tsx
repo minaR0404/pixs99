@@ -1,6 +1,7 @@
 import { auth, signIn, signOut } from "@/lib/next-auth";
 import { getUserPlan, getStripeCustomerId } from "@/lib/store";
-import { getSubscriptionInfo } from "@/lib/stripe";
+import { getSubscriptionInfo, PLAN_CONFIG } from "@/lib/stripe";
+import { getUserUsage } from "@/lib/usage";
 import DashboardClient from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -65,11 +66,23 @@ export default async function DashboardPage() {
 }
 
 async function loadPlanProps(githubId: string) {
-  const plan = await getUserPlan(githubId);
-  if (plan === "free") return { plan, subscription: null };
+  const [plan, usageRaw] = await Promise.all([
+    getUserPlan(githubId),
+    getUserUsage(githubId),
+  ]);
+
+  const config = PLAN_CONFIG[plan];
+  const usage = {
+    today: usageRaw.today,
+    thisMonth: usageRaw.thisMonth,
+    dailyLimit: config.searchesPerDay,
+    monthlyLimit: config.searchesPerMonth,
+  };
+
+  if (plan === "free") return { plan, subscription: null, usage };
   const customerId = await getStripeCustomerId(githubId);
   const subscription = customerId ? await getSubscriptionInfo(customerId) : null;
-  return { plan, subscription };
+  return { plan, subscription, usage };
 }
 
 function Header({ user }: { user?: { name: string; image: string } }) {
