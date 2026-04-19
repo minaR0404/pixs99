@@ -22,7 +22,7 @@ type Plan = "free" | "pro" | "ultra";
 
 interface SubscriptionInfo {
   currentPeriodEnd: number;
-  cancelAtPeriodEnd: boolean;
+  cancelAt: number | null;
 }
 
 const PLAN_LABELS: Record<Plan, string> = {
@@ -311,8 +311,7 @@ function PlanSection({
 }) {
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
 
-  const periodEndDate =
-    subscription && new Date(subscription.currentPeriodEnd * 1000).toLocaleDateString();
+  const formatDate = (unix: number) => new Date(unix * 1000).toLocaleDateString();
 
   async function handleUpgrade(target: Plan) {
     setUpgrading(target);
@@ -342,14 +341,14 @@ function PlanSection({
         <p className="text-sm text-muted">
           Current plan: <span className="text-foreground font-semibold">{PLAN_LABELS[plan]}</span>
         </p>
-        {subscription && periodEndDate && (
-          subscription.cancelAtPeriodEnd ? (
+        {subscription && (
+          subscription.cancelAt ? (
             <p className="text-sm text-muted">
-              Ends on <span className="text-foreground font-medium">{periodEndDate}</span>
+              Ends on <span className="text-foreground font-medium">{formatDate(subscription.cancelAt)}</span>
             </p>
           ) : (
             <p className="text-sm text-muted">
-              Renews on <span className="text-foreground font-medium">{periodEndDate}</span>
+              Renews on <span className="text-foreground font-medium">{formatDate(subscription.currentPeriodEnd)}</span>
             </p>
           )
         )}

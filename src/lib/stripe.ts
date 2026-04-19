@@ -41,7 +41,7 @@ export function planFromPriceId(priceId: string): Plan {
 
 export interface SubscriptionInfo {
   currentPeriodEnd: number;
-  cancelAtPeriodEnd: boolean;
+  cancelAt: number | null;
 }
 
 export async function getSubscriptionInfo(
@@ -56,8 +56,6 @@ export async function getSubscriptionInfo(
   if (!sub) return null;
   const periodEnd = sub.items.data[0]?.current_period_end;
   if (!periodEnd) return null;
-  return {
-    currentPeriodEnd: periodEnd,
-    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
-  };
+  const cancelAt = sub.cancel_at ?? (sub.cancel_at_period_end ? periodEnd : null);
+  return { currentPeriodEnd: periodEnd, cancelAt };
 }
