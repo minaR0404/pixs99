@@ -3,6 +3,7 @@ import { getUserPlan, getStripeCustomerId } from "@/lib/store";
 import { getSubscriptionInfo, PLAN_CONFIG } from "@/lib/stripe";
 import { getUserUsage } from "@/lib/usage";
 import DashboardClient from "./dashboard-client";
+import SignOutButton from "./sign-out-button";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -10,7 +11,12 @@ export default async function DashboardPage() {
   if (!session?.user) {
     return (
       <div className="flex-1 flex flex-col">
-        <Header />
+        <header className="border-b border-border px-6 py-4">
+          <a href="/" className="flex items-center gap-2">
+            <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
+            <span className="font-bold text-lg tracking-tight">PixS99</span>
+          </a>
+        </header>
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-6">
             <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -37,31 +43,20 @@ export default async function DashboardPage() {
     );
   }
 
+  async function signOutAction() {
+    "use server";
+    await signOut({ redirectTo: "/dashboard" });
+  }
+
   return (
-    <div className="flex-1 flex flex-col">
-      <Header
-        user={{ name: session.user.name ?? "", image: session.user.image ?? "" }}
-      />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-6 py-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/dashboard" });
-            }}
-          >
-            <button
-              type="submit"
-              className="text-sm text-muted hover:text-foreground transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-        <DashboardClient {...await loadPlanProps(session.user.id!)} />
-      </main>
-    </div>
+    <DashboardClient
+      {...await loadPlanProps(session.user.id!)}
+      user={{
+        name: session.user.name ?? "",
+        image: session.user.image ?? "",
+      }}
+      signOutSlot={<SignOutButton action={signOutAction} />}
+    />
   );
 }
 
@@ -83,29 +78,4 @@ async function loadPlanProps(githubId: string) {
   const customerId = await getStripeCustomerId(githubId);
   const subscription = customerId ? await getSubscriptionInfo(customerId) : null;
   return { plan, subscription, usage };
-}
-
-function Header({ user }: { user?: { name: string; image: string } }) {
-  return (
-    <header className="border-b border-border px-6 py-4">
-      <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2">
-          <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
-          <span className="font-bold text-lg tracking-tight">PixS99</span>
-        </a>
-        {user && (
-          <div className="flex items-center gap-2">
-            {user.image && (
-              <img
-                src={user.image}
-                alt={user.name}
-                className="w-7 h-7 rounded-full"
-              />
-            )}
-            <span className="text-sm text-muted">{user.name}</span>
-          </div>
-        )}
-      </div>
-    </header>
-  );
 }

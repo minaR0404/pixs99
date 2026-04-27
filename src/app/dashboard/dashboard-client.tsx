@@ -38,14 +38,24 @@ const PLAN_LABELS: Record<Plan, string> = {
   ultra: "Ultra",
 };
 
+const TAB_TITLES: Record<Tab, string> = {
+  keys: "API Keys",
+  history: "Search History",
+  plan: "Plan",
+};
+
 export default function DashboardClient({
   plan,
   subscription,
   usage,
+  user,
+  signOutSlot,
 }: {
   plan: Plan;
   subscription: SubscriptionInfo | null;
   usage: Usage;
+  user?: { name: string; image: string };
+  signOutSlot?: React.ReactNode;
 }) {
   const [tab, setTab] = useState<Tab>("keys");
   const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -95,7 +105,6 @@ export default function DashboardClient({
     if (!newKeyName.trim() || creating) return;
     setCreating(true);
     setCreatedKey(null);
-
     const res = await fetch("/api/keys", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -119,196 +128,396 @@ export default function DashboardClient({
     fetchKeys();
   }
 
-  if (loading) {
-    return <p className="text-muted text-sm">Loading...</p>;
-  }
+  const activeKeys = keys.filter((k) => k.is_active).length;
+  const todayPct = Math.min((usage.today / usage.dailyLimit) * 100, 100);
+  const monthPct = Math.min((usage.thisMonth / usage.monthlyLimit) * 100, 100);
 
   return (
-    <div className="space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+    <div className="db-shell">
+      {/* Sidebar */}
+      <nav className="db-sidebar">
+        <div className="db-brand">
+          <div className="db-brand-mark">
+            <svg viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.5">
+              <rect x="1" y="1" width="6" height="6" rx="1.5" />
+              <rect x="9" y="1" width="6" height="6" rx="1.5" />
+              <rect x="1" y="9" width="6" height="6" rx="1.5" />
+              <rect x="9" y="9" width="6" height="6" rx="1.5" />
+            </svg>
+          </div>
+          <span className="db-brand-name">PixS99</span>
+        </div>
+
+        <span className="db-nav-label">Main</span>
+
         <button
           onClick={() => setTab("keys")}
-          className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
-            tab === "keys"
-              ? "border-b-2 border-accent text-foreground"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`db-nav-item${tab === "keys" ? " active" : ""}`}
         >
+          <svg className="db-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="6" cy="8" r="3.5" />
+            <path d="M9.5 8h5M13 6.5V8" strokeLinecap="round" />
+          </svg>
           API Keys
         </button>
+
         <button
           onClick={() => setTab("history")}
-          className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
-            tab === "history"
-              ? "border-b-2 border-accent text-foreground"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`db-nav-item${tab === "history" ? " active" : ""}`}
         >
+          <svg className="db-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="8" cy="8" r="6.5" />
+            <path d="M8 4.5V8l2.5 2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           Search History
         </button>
+
         <button
           onClick={() => setTab("plan")}
-          className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
-            tab === "plan"
-              ? "border-b-2 border-accent text-foreground"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`db-nav-item${tab === "plan" ? " active" : ""}`}
         >
+          <svg className="db-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 12l4-4 3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           Plan
         </button>
-      </div>
 
-      {tab === "keys" && (
-        <>
-          {/* Create new key */}
-          <div className="rounded-lg bg-card border border-border p-5 space-y-4">
-            <h2 className="font-semibold">Create new key</h2>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={newKeyName}
-                onChange={(e) => setNewKeyName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                placeholder="Key name (e.g. my-bot)"
-                className="flex-1 rounded-lg bg-background border border-border px-4 py-2.5 text-foreground placeholder:text-muted"
-              />
-              <button
-                onClick={handleCreate}
-                disabled={!newKeyName.trim() || creating}
-                className="rounded-lg bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {creating ? "Creating..." : "Create"}
-              </button>
+        <div className="db-sidebar-footer">
+          <div className="db-user-card">
+            <div className="db-avatar">
+              {user?.image ? (
+                <img src={user.image} alt={user.name} />
+              ) : (
+                <span>{user?.name?.[0] ?? "U"}</span>
+              )}
+            </div>
+            <div className="db-user-meta">
+              <div className="db-user-name">{user?.name ?? "User"}</div>
+              <div className="db-user-plan">{PLAN_LABELS[plan]} plan</div>
+            </div>
+            {signOutSlot}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main */}
+      <div className="db-main">
+        <div className="db-topbar">
+          <div className="db-breadcrumb">
+            <span>Dashboard</span>
+            <span className="sep">/</span>
+            <span className="current">{TAB_TITLES[tab]}</span>
+          </div>
+          <div className="db-topbar-actions">
+            <div className="db-env-pill">
+              <span className="db-env-dot" />
+              Live
+            </div>
+          </div>
+        </div>
+
+        <div className="db-content">
+          {/* Stats grid */}
+          <div className="db-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: 28 }}>
+            <div className="db-stat">
+              <div className="db-stat-label">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="7" cy="7" r="5.5" />
+                  <path d="M7 4v3l2 1.5" strokeLinecap="round" />
+                </svg>
+                Today
+              </div>
+              <div className="db-stat-value">{usage.today.toLocaleString()}</div>
+              <div className="db-stat-sub">/ {usage.dailyLimit.toLocaleString()} searches</div>
+              <div className="db-stat-bar-wrap">
+                <div className="db-stat-bar-fill" style={{ width: `${todayPct}%` }} />
+              </div>
             </div>
 
-            {createdKey && (
-              <div className="rounded-lg bg-accent/10 border border-accent/30 p-4 space-y-2">
-                <p className="text-sm font-semibold text-accent">
-                  Key created — copy it now, it won&apos;t be shown again
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 text-sm font-mono bg-background rounded px-3 py-2 break-all">
-                    {createdKey}
-                  </code>
-                  <CopyButton text={createdKey} />
-                </div>
+            <div className="db-stat">
+              <div className="db-stat-label">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="1" y="2.5" width="12" height="10" rx="1.5" />
+                  <path d="M4 1v3M10 1v3M1 6h12" strokeLinecap="round" />
+                </svg>
+                This month
               </div>
-            )}
+              <div className="db-stat-value">{usage.thisMonth.toLocaleString()}</div>
+              <div className="db-stat-sub">/ {usage.monthlyLimit.toLocaleString()} searches</div>
+              <div className="db-stat-bar-wrap">
+                <div className="db-stat-bar-fill" style={{ width: `${monthPct}%` }} />
+              </div>
+            </div>
+
+            <div className="db-stat">
+              <div className="db-stat-label">
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M2 10l3-3 2.5 2.5L11 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Active keys
+              </div>
+              <div className="db-stat-value">{loading ? "—" : activeKeys}</div>
+              <div className="db-stat-sub">{PLAN_LABELS[plan]} plan</div>
+            </div>
           </div>
 
-          {/* Key list */}
-          <div className="rounded-lg bg-card border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-muted">
-                  <th className="px-5 py-3 font-medium">Name</th>
-                  <th className="px-5 py-3 font-medium">Key</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Created</th>
-                  <th className="px-5 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {keys.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-muted">
-                      No API keys yet
-                    </td>
-                  </tr>
-                ) : (
-                  keys.map((k) => (
-                    <tr key={k.id} className="border-b border-border last:border-0">
-                      <td className="px-5 py-3 font-medium">{k.name}</td>
-                      <td className="px-5 py-3 font-mono text-muted">{k.prefix}</td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                            k.is_active
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-red-500/20 text-red-400"
-                          }`}
-                        >
-                          {k.is_active ? "Active" : "Revoked"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted">
-                        {new Date(k.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        {k.is_active && (
-                          <button
-                            onClick={() => handleRevoke(k.id)}
-                            className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
-                          >
-                            Revoke
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+          {/* Tab content */}
+          {tab === "keys" && (
+            <KeysTab
+              keys={keys}
+              loading={loading}
+              newKeyName={newKeyName}
+              setNewKeyName={setNewKeyName}
+              createdKey={createdKey}
+              creating={creating}
+              handleCreate={handleCreate}
+              handleRevoke={handleRevoke}
+            />
+          )}
 
-      {tab === "plan" && (
-        <PlanSection plan={plan} subscription={subscription} usage={usage} />
-      )}
+          {tab === "plan" && (
+            <PlanSection plan={plan} subscription={subscription} usage={usage} />
+          )}
 
-      {tab === "history" && (
-        <div className="rounded-lg bg-card border border-border overflow-hidden">
-          {!historyFetched || historyLoading ? (
-            <p className="px-5 py-8 text-center text-muted text-sm">Loading...</p>
-          ) : history.length === 0 ? (
-            <p className="px-5 py-8 text-center text-muted text-sm">
-              No search history yet. Searches made with your API keys will appear here.
-            </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-muted">
-                  <th className="px-5 py-3 font-medium">Query</th>
-                  <th className="px-5 py-3 font-medium">Images</th>
-                  <th className="px-5 py-3 font-medium">Date</th>
-                  <th className="px-5 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((h) => (
-                  <tr key={h.id} className="border-b border-border last:border-0">
-                    <td className="px-5 py-3 font-medium">{h.query}</td>
-                    <td className="px-5 py-3 text-muted">{h.image_count}</td>
-                    <td className="px-5 py-3 text-muted">
-                      {new Date(h.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <a
-                        href={`/v/${h.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent hover:underline text-xs font-medium"
-                      >
-                        View
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {tab === "history" && (
+            <HistoryTab
+              history={history}
+              loading={!historyFetched || historyLoading}
+            />
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-const PLANS: { key: Plan; name: string; price: string; features: string[] }[] = [
-  { key: "free", name: "Free", price: "$0", features: ["10 searches / day", "50 searches / month", "7-day TTL"] },
-  { key: "pro", name: "Pro", price: "$19", features: ["70 searches / day", "2,000 searches / month", "30-day TTL", "API key dashboard"] },
-  { key: "ultra", name: "Ultra", price: "$49", features: ["350 searches / day", "10,000 searches / month", "Unlimited TTL", "Search history"] },
+function KeysTab({
+  keys,
+  loading,
+  newKeyName,
+  setNewKeyName,
+  createdKey,
+  creating,
+  handleCreate,
+  handleRevoke,
+}: {
+  keys: ApiKey[];
+  loading: boolean;
+  newKeyName: string;
+  setNewKeyName: (v: string) => void;
+  createdKey: string | null;
+  creating: boolean;
+  handleCreate: () => void;
+  handleRevoke: (id: string) => void;
+}) {
+  return (
+    <>
+      <div className="db-card" style={{ marginBottom: 16 }}>
+        <div className="db-card-header">
+          <div>
+            <p className="db-card-title">Create new key</p>
+            <p className="db-card-sub">Name your key to identify its usage</p>
+          </div>
+        </div>
+        <div className="db-card-body" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              placeholder="e.g. my-bot"
+              className="db-input"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newKeyName.trim() || creating}
+              className="db-btn db-btn-primary"
+              style={{ flexShrink: 0 }}
+            >
+              {creating ? "Creating…" : "Create"}
+            </button>
+          </div>
+
+          {createdKey && (
+            <div style={{
+              background: "var(--accent-glow)",
+              border: "1px solid rgba(99,102,241,0.3)",
+              borderRadius: 8,
+              padding: "12px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--db-accent)", margin: 0 }}>
+                Key created — copy it now, it won&apos;t be shown again
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <code className="db-code-block" style={{ flex: 1, padding: "8px 12px", wordBreak: "break-all" }}>
+                  {createdKey}
+                </code>
+                <CopyButton text={createdKey} />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="db-card">
+        <div className="db-card-header">
+          <p className="db-card-title">Your API keys</p>
+        </div>
+        <table className="db-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Key</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: "center", color: "var(--text-mute)", padding: "32px 20px" }}>
+                  Loading…
+                </td>
+              </tr>
+            ) : keys.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: "center", color: "var(--text-mute)", padding: "32px 20px" }}>
+                  No API keys yet
+                </td>
+              </tr>
+            ) : (
+              keys.map((k) => (
+                <tr key={k.id}>
+                  <td style={{ fontWeight: 500 }}>{k.name}</td>
+                  <td>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-dim)" }}>
+                      {k.prefix}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`db-badge ${k.is_active ? "db-badge-active" : "db-badge-revoked"}`}>
+                      {k.is_active ? "Active" : "Revoked"}
+                    </span>
+                  </td>
+                  <td style={{ color: "var(--text-dim)" }}>
+                    {new Date(k.created_at).toLocaleDateString()}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {k.is_active && (
+                      <button
+                        onClick={() => handleRevoke(k.id)}
+                        className="db-btn db-btn-danger"
+                        style={{ fontSize: 12, padding: "4px 10px" }}
+                      >
+                        Revoke
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function HistoryTab({
+  history,
+  loading,
+}: {
+  history: HistoryItem[];
+  loading: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = query
+    ? history.filter((h) => h.query.toLowerCase().includes(query.toLowerCase()))
+    : history;
+
+  return (
+    <>
+      <div className="db-history-toolbar">
+        <div className="db-search-wrap">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="6" cy="6" r="4.5" />
+            <path d="M9.5 9.5l3 3" strokeLinecap="round" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Filter searches…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="db-input"
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <p style={{ textAlign: "center", color: "var(--text-mute)", padding: "48px 0" }}>Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p style={{ textAlign: "center", color: "var(--text-mute)", padding: "48px 0" }}>
+          {history.length === 0
+            ? "No search history yet. Searches made with your API keys will appear here."
+            : "No results match your filter."}
+        </p>
+      ) : (
+        <div className="db-history-grid">
+          {filtered.map((h) => (
+            <a
+              key={h.id}
+              href={`/v/${h.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="db-history-card"
+            >
+              <div className="db-history-thumbs">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="db-thumb" />
+                ))}
+              </div>
+              <div className="db-history-meta">
+                <p className="db-history-query">{h.query}</p>
+                <div className="db-history-info">
+                  <span>{h.image_count} images</span>
+                  <span>{new Date(h.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+const PLANS: { key: Plan; name: string; price: string; desc: string; features: string[] }[] = [
+  {
+    key: "free",
+    name: "Free",
+    price: "$0",
+    desc: "Get started for free",
+    features: ["10 searches / day", "50 searches / month", "7-day result TTL"],
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    price: "$19",
+    desc: "For power users",
+    features: ["70 searches / day", "2,000 searches / month", "30-day result TTL", "API key dashboard"],
+  },
+  {
+    key: "ultra",
+    name: "Ultra",
+    price: "$49",
+    desc: "Unlimited access",
+    features: ["350 searches / day", "10,000 searches / month", "Unlimited result TTL", "Search history"],
+  },
 ];
 
 function PlanSection({
@@ -321,7 +530,6 @@ function PlanSection({
   usage: Usage;
 }) {
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
-
   const formatDate = (unix: number) => new Date(unix * 1000).toLocaleDateString();
 
   async function handleUpgrade(target: Plan) {
@@ -332,93 +540,106 @@ function PlanSection({
       body: JSON.stringify({ plan: target }),
     });
     const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    }
+    if (data.url) window.location.href = data.url;
     setUpgrading(null);
   }
 
   async function handleManage() {
     const res = await fetch("/api/stripe/portal", { method: "POST" });
     const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    }
+    if (data.url) window.location.href = data.url;
   }
 
+  const todayPct = Math.min((usage.today / usage.dailyLimit) * 100, 100);
+  const monthPct = Math.min((usage.thisMonth / usage.monthlyLimit) * 100, 100);
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg bg-card border border-border p-5 space-y-2">
-        <p className="text-sm text-muted">
-          Current plan: <span className="text-foreground font-semibold">{PLAN_LABELS[plan]}</span>
-        </p>
-        {subscription && (
-          subscription.cancelAt ? (
-            <p className="text-sm text-muted">
-              Ends on <span className="text-foreground font-medium">{formatDate(subscription.cancelAt)}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Current plan info */}
+      <div className="db-card">
+        <div className="db-card-header">
+          <div>
+            <p className="db-card-title">Current plan</p>
+            <p className="db-card-sub">
+              {subscription
+                ? subscription.cancelAt
+                  ? `Ends on ${formatDate(subscription.cancelAt)}`
+                  : `Renews on ${formatDate(subscription.currentPeriodEnd)}`
+                : "No active subscription"}
             </p>
-          ) : (
-            <p className="text-sm text-muted">
-              Renews on <span className="text-foreground font-medium">{formatDate(subscription.currentPeriodEnd)}</span>
-            </p>
-          )
-        )}
-        <div className="pt-3 mt-1 border-t border-border space-y-1">
-          <p className="text-sm text-muted">
-            Today: <span className="text-foreground font-medium">{usage.today.toLocaleString()}</span> / {usage.dailyLimit.toLocaleString()} searches
-          </p>
-          <p className="text-sm text-muted">
-            This month: <span className="text-foreground font-medium">{usage.thisMonth.toLocaleString()}</span> / {usage.monthlyLimit.toLocaleString()} searches
-          </p>
+          </div>
+          {plan !== "free" && (
+            <button onClick={handleManage} className="db-btn db-btn-ghost" style={{ fontSize: 12 }}>
+              Manage subscription
+            </button>
+          )}
         </div>
-        {plan !== "free" && (
-          <button
-            onClick={handleManage}
-            className="mt-1 text-sm text-accent hover:underline"
-          >
-            Manage subscription
-          </button>
-        )}
+        <div className="db-card-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+              <span style={{ color: "var(--text-dim)" }}>Today</span>
+              <span style={{ color: "var(--text)", fontFeatureSettings: '"tnum"' }}>
+                {usage.today.toLocaleString()} / {usage.dailyLimit.toLocaleString()}
+              </span>
+            </div>
+            <div className="db-usage-bar-wrap">
+              <div className="db-usage-bar-fill" style={{ width: `${todayPct}%` }} />
+            </div>
+          </div>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+              <span style={{ color: "var(--text-dim)" }}>This month</span>
+              <span style={{ color: "var(--text)", fontFeatureSettings: '"tnum"' }}>
+                {usage.thisMonth.toLocaleString()} / {usage.monthlyLimit.toLocaleString()}
+              </span>
+            </div>
+            <div className="db-usage-bar-wrap">
+              <div className="db-usage-bar-fill" style={{ width: `${monthPct}%` }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      {/* Plan cards */}
+      <div className="db-plan-grid">
         {PLANS.map((p) => {
           const isCurrent = p.key === plan;
-          const isDowngrade = (plan === "ultra" && p.key === "pro") || (plan !== "free" && p.key === "free");
+          const isDowngrade =
+            (plan === "ultra" && p.key === "pro") || (plan !== "free" && p.key === "free");
           return (
-            <div
-              key={p.key}
-              className={`rounded-lg border p-5 space-y-3 ${
-                isCurrent ? "bg-accent/5 border-accent/30" : "bg-card border-border"
-              }`}
-            >
-              <div>
-                <h3 className="font-semibold">{p.name}</h3>
-                <p className="text-2xl font-bold mt-1">
-                  {p.price}<span className="text-sm font-normal text-muted">/mo</span>
-                </p>
-              </div>
-              <ul className="space-y-1 text-sm text-muted">
+            <div key={p.key} className={`db-plan-card${isCurrent ? " current" : ""}`}>
+              {isCurrent && <span className="db-plan-tag">CURRENT</span>}
+              <p className="db-plan-name">{p.name}</p>
+              <p className="db-plan-price">
+                {p.price}<small>/mo</small>
+              </p>
+              <p className="db-plan-desc">{p.desc}</p>
+              <ul className="db-plan-features">
                 {p.features.map((f, i) => (
-                  <li key={i}>+ {f}</li>
+                  <li key={i}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M2.5 7l3 3 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {f}
+                  </li>
                 ))}
               </ul>
               {isCurrent ? (
-                <span className="block text-center text-sm text-muted py-2">Current plan</span>
+                <button className="db-btn db-btn-ghost" style={{ width: "100%", justifyContent: "center", cursor: "default", opacity: 0.5 }} disabled>
+                  Current plan
+                </button>
               ) : isDowngrade ? (
-                <button
-                  onClick={handleManage}
-                  className="w-full rounded-lg py-2 text-sm font-medium bg-border text-foreground hover:opacity-80 transition-opacity"
-                >
+                <button onClick={handleManage} className="db-btn db-btn-ghost" style={{ width: "100%", justifyContent: "center" }}>
                   Manage
                 </button>
               ) : (
                 <button
                   onClick={() => handleUpgrade(p.key)}
                   disabled={upgrading !== null}
-                  className="w-full rounded-lg py-2 text-sm font-medium bg-accent text-white hover:opacity-90 transition-opacity disabled:opacity-40"
+                  className="db-btn db-btn-primary"
+                  style={{ width: "100%", justifyContent: "center" }}
                 >
-                  {upgrading === p.key ? "Redirecting..." : "Upgrade"}
+                  {upgrading === p.key ? "Redirecting…" : "Upgrade"}
                 </button>
               )}
             </div>
@@ -435,17 +656,27 @@ function CopyButton({ text }: { text: string }) {
   async function handleCopy() {
     await navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   return (
-    <button
-      onClick={handleCopy}
-      className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-all ${
-        copied ? "bg-green-600" : "bg-accent hover:opacity-90"
-      }`}
-    >
-      {copied ? "Copied!" : "Copy"}
+    <button onClick={handleCopy} className="db-btn db-btn-ghost" style={{ flexShrink: 0 }}>
+      {copied ? (
+        <>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2.5 7l3 3 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Copied
+        </>
+      ) : (
+        <>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="4.5" y="4.5" width="8" height="8" rx="1.5" />
+            <path d="M9.5 4.5V2.5a1 1 0 00-1-1h-6a1 1 0 00-1 1v6a1 1 0 001 1H4.5" />
+          </svg>
+          Copy
+        </>
+      )}
     </button>
   );
 }
