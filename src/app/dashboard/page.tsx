@@ -54,6 +54,7 @@ export default async function DashboardPage() {
       user={{
         name: session.user.name ?? "",
         image: session.user.image ?? "",
+        email: session.user.email ?? "",
       }}
       signOutSlot={<SignOutButton action={signOutAction} />}
     />
