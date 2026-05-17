@@ -2,6 +2,7 @@ import { auth, signIn, signOut } from "@/lib/next-auth";
 import { getUserPlan, getStripeCustomerId } from "@/lib/store";
 import { getSubscriptionInfo, PLAN_CONFIG } from "@/lib/stripe";
 import { getUserUsage } from "@/lib/usage";
+import Link from "next/link";
 import DashboardClient from "./dashboard-client";
 import SignOutButton from "./sign-out-button";
 
@@ -12,10 +13,10 @@ export default async function DashboardPage() {
     return (
       <div className="flex-1 flex flex-col">
         <header className="border-b border-border px-6 py-4">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
             <span className="font-bold text-lg tracking-tight">PixS99</span>
-          </a>
+          </Link>
         </header>
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-6">

@@ -41,7 +41,8 @@ export default async function ViewerPage({ params }: { params: Params }) {
 
   const createdAt = new Date(result.created_at);
   const expiresAt = new Date(createdAt.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const daysRemaining = Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  const now = new Date();
+  const daysRemaining = Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
   const images = result.images.map(img => ({
     ...img,

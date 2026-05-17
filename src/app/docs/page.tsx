@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "API Docs — PixS99",
@@ -10,16 +11,16 @@ export default function DocsPage() {
     <div className="flex-1 flex flex-col">
       <header className="border-b border-border px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <img src="/favicon.svg" alt="PixS99" className="w-8 h-8" />
             <span className="font-bold text-lg tracking-tight">PixS99</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/dashboard"
             className="text-sm text-muted hover:text-foreground transition-colors"
           >
             Dashboard
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -41,9 +42,9 @@ export default function DocsPage() {
           </CodeBlock>
           <p>
             Get your API key from the{" "}
-            <a href="/dashboard" className="text-accent hover:underline">
+            <Link href="/dashboard" className="text-accent hover:underline">
               Dashboard
-            </a>
+            </Link>
             .
           </p>
         </Section>
@@ -120,9 +121,9 @@ export default function DocsPage() {
       <footer className="border-t border-border px-6 py-4">
         <div className="max-w-3xl mx-auto text-xs text-muted">
           Powered by{" "}
-          <a href="/" className="text-accent hover:underline">
+          <Link href="/" className="text-accent hover:underline">
             PixS99
-          </a>
+          </Link>
         </div>
       </footer>
     </div>

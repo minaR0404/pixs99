@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 
 interface Image {
@@ -88,10 +89,10 @@ export default function ViewerClient({ id, query, images, createdAt, daysRemaini
       {/* Topbar */}
       <div className="vw-topbar">
         <div className="vw-wrap vw-topbar-inner">
-          <a href="/" className="vw-brand">
+          <Link href="/" className="vw-brand">
             <BrandMark />
             PixS99
-          </a>
+          </Link>
           <div className="vw-topbar-right">
             <span className="vw-viewer-id">{id}</span>
             <button className="vw-icon-btn" title="Copy link" onClick={handleCopyLink}>
@@ -107,13 +108,13 @@ export default function ViewerClient({ id, query, images, createdAt, daysRemaini
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
               </svg>
             </button>
-            <a href="/dashboard" className="vw-btn vw-btn-ghost">
+            <Link href="/dashboard" className="vw-btn vw-btn-ghost">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
               Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -163,12 +164,12 @@ export default function ViewerClient({ id, query, images, createdAt, daysRemaini
                 </svg>
                 Download all
               </button>
-              <a href="/#demo" className="vw-btn vw-btn-primary">
+              <Link href="/#demo" className="vw-btn vw-btn-primary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
                 </svg>
                 New search
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -307,12 +308,12 @@ export default function ViewerClient({ id, query, images, createdAt, daysRemaini
       <footer>
         <div className="vw-wrap vw-footer-inner">
           <span>
-            Powered by <a href="/" className="brand-link">PixS99</a> · viewer URLs are immutable &amp; shareable
+            Powered by <Link href="/" className="brand-link">PixS99</Link> · viewer URLs are immutable &amp; shareable
           </span>
           <div className="vw-footer-actions">
             <a href="#">Report</a>
             <a href="#">Privacy</a>
-            <a href="/">Get your API key</a>
+            <Link href="/">Get your API key</Link>
           </div>
         </div>
       </footer>

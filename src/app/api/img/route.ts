@@ -1,8 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isIP } from "net";
 import { verifyUrl } from "@/lib/proxy";
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+
+function isBlockedHostname(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (
+    host === "localhost" ||
+    host === "0.0.0.0" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  const ipVersion = isIP(host);
+  if (ipVersion === 4) {
+    const parts = host.split(".").map(Number);
+    const [a, b] = parts;
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168)
+    );
+  }
+
+  if (ipVersion === 6) {
+    return (
+      host === "::1" ||
+      host.startsWith("fc") ||
+      host.startsWith("fd") ||
+      host.startsWith("fe80:")
+    );
+  }
+
+  return false;
+}
+
+function parseAllowedImageUrl(value: string): URL | null {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    if (parsed.username || parsed.password) return null;
+    if (isBlockedHostname(parsed.hostname)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
@@ -16,8 +67,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
+  const imageUrl = parseAllowedImageUrl(url);
+  if (!imageUrl) {
+    return NextResponse.json({ error: "URL is not allowed" }, { status: 400 });
+  }
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(imageUrl, {
       headers: {
         "User-Agent": "PixS99/1.0",
         Accept: "image/*",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
 interface ApiKey {
@@ -308,18 +309,27 @@ export default function DashboardClient({
     setHistoryFetched(true);
   }, []);
 
-  useEffect(() => { fetchKeys(); fetchAnalytics(); }, [fetchKeys, fetchAnalytics]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      fetchKeys();
+      fetchAnalytics();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchKeys, fetchAnalytics]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has("upgraded")) {
       window.history.replaceState({}, "", "/dashboard");
-      setTab("plan");
+      window.setTimeout(() => setTab("plan"), 0);
     }
   }, []);
 
   useEffect(() => {
-    if (tab === "history" && !historyFetched) fetchHistory();
+    if (tab === "history" && !historyFetched) {
+      const timer = window.setTimeout(() => fetchHistory(), 0);
+      return () => window.clearTimeout(timer);
+    }
   }, [tab, historyFetched, fetchHistory]);
 
   async function handleCreate() {
@@ -533,11 +543,11 @@ function OverviewPage({ usage, plan, keys, analytics }: { usage: Usage; plan: Pl
 
   const reqDelta   = analytics ? weekDelta(analytics.thisWeekRequests, analytics.prevWeekRequests) : null;
   const imgDelta   = analytics ? weekDelta(analytics.thisWeekImages,   analytics.prevWeekImages)   : null;
-  const chartDays  = range === "24h" ? 1 : range === "7d" ? 7 : range === "90d" ? 30 : 30;
-  const chartData  = analytics ? buildDailyArray(analytics.daily, 30, "count") : null;
+  const chartDays  = range === "7d" ? 7 : 30;
+  const chartData  = analytics ? buildDailyArray(analytics.daily, chartDays, "count") : null;
   const sparkReq   = analytics ? buildDailyArray(analytics.daily, 20, "count") : null;
   const sparkImg   = analytics ? buildDailyArray(analytics.daily, 20, "images") : null;
-  const dateLabels = chartDateLabels(30);
+  const dateLabels = chartDateLabels(chartDays);
 
   const stats = [
     {
@@ -981,6 +991,7 @@ const PLANS: { key: Plan; name: string; price: string; desc: string; features: s
 ];
 
 function PlanSection({ plan, subscription, usage }: { plan: Plan; subscription: SubscriptionInfo | null; usage: Usage }) {
+  const router = useRouter();
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
   const fmt = (unix: number) => new Date(unix * 1000).toLocaleDateString();
   const todayPct  = Math.min((usage.today    / usage.dailyLimit)   * 100, 100);
@@ -993,14 +1004,14 @@ function PlanSection({ plan, subscription, usage }: { plan: Plan; subscription: 
       body: JSON.stringify({ plan: target }),
     });
     const data = await res.json();
-    if (data.url) window.location.href = data.url;
+    if (data.url) router.push(data.url);
     setUpgrading(null);
   }
 
   async function handleManage() {
     const res = await fetch("/api/stripe/portal", { method: "POST" });
     const data = await res.json();
-    if (data.url) window.location.href = data.url;
+    if (data.url) router.push(data.url);
   }
 
   return (
